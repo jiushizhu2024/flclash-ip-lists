@@ -1,0 +1,64 @@
+name: Update IP Proxy Lists
+
+on:
+  schedule:
+    - cron: '0 */3 * * *'
+  workflow_dispatch:
+
+jobs:
+  extract-and-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Extract proxy lists
+        run: python3 scripts/extract_proxies.py
+
+      - name: Write output files
+        run: |
+          mkdir -p outputs
+          python3 -c "
+          import json, yaml
+
+          with open('/tmp/ip_lists.json') as f:
+              data = json.load(f)
+
+          for name, content in data.items():
+              if content:
+                  try:
+                      parsed = yaml.safe_load(content)
+                      if parsed and 'proxies' in parsed:
+                          out = {'proxies': parsed['proxies']}
+                          with open(f'outputs/{name}.yaml', 'w') as f:
+                              yaml.dump(out, f, allow_unicode=True, sort_keys=False, width=200)
+                          print(f'Wrote outputs/{name}.yaml with {len(parsed[\"proxies\"])} proxies')
+                      else:
+                          with open(f'outputs/{name}.yaml', 'w') as f:
+                              f.write(content)
+                          print(f'Wrote outputs/{name}.yaml (raw)')
+                  except Exception as e:
+                      print(f'Error processing {name}: {e}')
+              else:
+                  print(f'Skipping {name} (no data)')
+          "
+
+      - name: Commit and push
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add outputs/
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update IP proxy lists [skip ci]"
+            git push
+          fi
