@@ -1,0 +1,7 @@
+proxies:
+  - name: ip1
+    type: anytls
+    server: anytls2.864106.xyz
+    port: 19000
+    password: "github.com/Alvin9999-newpac/fanqiang"
+    sni: anytls2.864106.xyz
