@@ -1,0 +1,13 @@
+proxies:
+  - name: ip4
+    type: hysteria
+    server: IP#7f8bbd
+    port: 22335
+    auth-str: github.com/Alvin9999-newpac/fanqiang
+    sni: bing.com
+    skip-cert-verify: true
+    alpn:
+      - h3
+    protocol: udp
+    up: "11 Mbps"
+    down: "55 Mbps"
